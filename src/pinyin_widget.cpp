@@ -33,7 +33,7 @@ void PinyinWidget::paintEvent(QPaintEvent *)
     
     for (int i = 0; i < chineseWords.length(); i++) {
         painter.setPen(QPen(QColor("#2CA7F8")));
-        painter.drawText(QRect(paddingX + x, pinyinRenderY, rect().width() - x, rect().height()), Qt::AlignLeft | Qt::AlignTop, pinyinWords[i]);
+        painter.drawText(QRect(paddingX + x, pinyinRenderY, rect().width() - x, rect().height()), Qt::AlignLeft | Qt::AlignTop, pinyinWords[i].toUpper());
         
         painter.setPen(QPen(QColor("#333333")));
         painter.drawText(QRect(paddingX + x, chineseRenderY, rect().width() - x, rect().height()), Qt::AlignLeft | Qt::AlignTop, chineseWords[i]);
