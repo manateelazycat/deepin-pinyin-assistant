@@ -21,7 +21,6 @@ void PinyinWidget::paintEvent(QPaintEvent *)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
 
-    Utils::setFontSize(painter, 16);
     
     int x = 0;
     int wordWidth = 60;
@@ -32,9 +31,11 @@ void PinyinWidget::paintEvent(QPaintEvent *)
     int paddingX = 20;
     
     for (int i = 0; i < chineseWords.length(); i++) {
+        Utils::setFontSize(painter, 12);
         painter.setPen(QPen(QColor("#2CA7F8")));
         painter.drawText(QRect(paddingX + x, pinyinRenderY, rect().width() - x, rect().height()), Qt::AlignLeft | Qt::AlignTop, pinyinWords[i].toUpper());
         
+        Utils::setFontSize(painter, 16);
         painter.setPen(QPen(QColor("#333333")));
         painter.drawText(QRect(paddingX + x, chineseRenderY, rect().width() - x, rect().height()), Qt::AlignLeft | Qt::AlignTop, chineseWords[i]);
         
