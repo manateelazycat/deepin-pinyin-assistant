@@ -13,6 +13,15 @@ public:
     
     void startListen();
     
+    static void listenFromMicrophone(const char* sessionBeginParams);
+    static void showResult(char *string, char isOver);
+    static void resultHandler(const char *result, char isLast);
+    static void speechBeginHandler();
+    static void speechEndHandler(int reason);
+    
+signals:
+    void voiceText(QString text);
+    
 protected:
     void run();
 };

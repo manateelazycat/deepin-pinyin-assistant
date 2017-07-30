@@ -32,27 +32,86 @@
 #include <QStyleFactory>
 #include <iostream>
 #include <signal.h>
+#include "chinese2pinyin.h"
 
 using namespace std;
+using namespace Pinyin;
 
 MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent)
 {
+    // Init.
     installEventFilter(this);   // add event filter
+    setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus | Qt::BypassWindowManagerHint);
 
+    // Init titlebar.
     if (this->titlebar()) {
-        this->titlebar()->setWindowFlags(Qt::WindowTitleHint | Qt::WindowMinimizeButtonHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint);
-
-        this->setFixedSize(478, 379);
+        this->titlebar()->setWindowFlags(Qt::WindowCloseButtonHint);
     }
 
+    // Init background.
     DThemeManager::instance()->setTheme("light");
+    setAttribute(Qt::WA_TranslucentBackground);
+    setEnableBlurWindow(true);
+    setTranslucentBackground(true);
+    
+    // Init time.
+    recordingTime = 0;
+    
+    
+    // Init widget.
+    waveform = new Waveform();
+    pinyinWidget = new PinyinWidget();
+    
+    layoutWidget = new QWidget();
+    this->setCentralWidget(layoutWidget);
+    
+    stackedLayout = new QStackedLayout();
+    layoutWidget->setLayout(stackedLayout);
+    
+    stackedLayout->addWidget(waveform);
+    stackedLayout->addWidget(pinyinWidget);
+    
+    // Init audio recorder.
+    audioRecorder = new QAudioRecorder(this);
+    
+    QAudioEncoderSettings audioSettings;
+    audioSettings.setCodec("audio/PCM");
+    audioSettings.setQuality(QMultimedia::HighQuality);
+    audioRecorder->setEncodingSettings(audioSettings);
+    audioRecorder->setContainerFormat("wav");
 
-    listenVoice.startListen();
+    audioProbe = new QAudioProbe(this);
+    if (audioProbe->setSource(audioRecorder)) {
+        connect(audioProbe, SIGNAL(audioBufferProbed(QAudioBuffer)), this, SLOT(renderLevel(QAudioBuffer)));
+    }
+
+    // Start listen.
+    connect(&listenVoice, &ListenVoice::voiceText, this, &MainWindow::showPinyin, Qt::QueuedConnection);
+    startListen();
 }
 
 MainWindow::~MainWindow()
 {
     // We don't need clean pointers because application has exit here.
+}
+
+void MainWindow::startListen()
+{
+    qDebug() << "Start listen";
+    
+    stackedLayout->setCurrentIndex(0);
+    
+    QDateTime currentTime = QDateTime::currentDateTime();
+    lastUpdateTime = currentTime;
+    audioRecorder->record();
+    listenVoice.startListen();
+}
+
+void MainWindow::showPinyin(QString text)
+{
+    stackedLayout->setCurrentIndex(1);
+    
+    pinyinWidget->setPinyin(Pinyin::splitChinese(text), Pinyin::splitChineseToPinyin(text));
 }
 
 bool MainWindow::eventFilter(QObject *, QEvent *event)
@@ -62,4 +121,17 @@ bool MainWindow::eventFilter(QObject *, QEvent *event)
 
 void MainWindow::paintEvent(QPaintEvent *)
 {
+    
+}
+
+void MainWindow::renderLevel(const QAudioBuffer &buffer)
+{
+    QDateTime currentTime = QDateTime::currentDateTime();
+    recordingTime += lastUpdateTime.msecsTo(currentTime);
+    lastUpdateTime = currentTime;
+
+    QVector<qreal> levels = Waveform::getBufferLevels(buffer);
+    for (int i = 0; i < levels.count(); ++i) {
+        waveform->updateWave(levels.at(i));
+    }
 }

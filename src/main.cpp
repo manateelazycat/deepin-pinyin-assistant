@@ -23,6 +23,7 @@
 
 #include "utils.h"
 #include "main_window.h"
+#include <QCoreApplication>
 #include <DApplication>
 #include <DMainWindow>
 #include <QApplication>
@@ -41,16 +42,16 @@ int main(int argc, char *argv[])
 
     DApplication app(argc, argv);
 
-    const QString socket_path(QString("deepin-font-installer_%1").arg(getuid()));
+    const QString socket_path(QString("deepin-pinyin-assistant"));
     if (app.setSingleInstance(socket_path)) {
         app.loadTranslator();
 
         const QString descriptionText = QApplication::tr("Deepin Font Installer is a simple font installer");
 
-        const QString acknowledgementLink = "https://www.deepin.org/acknowledgments/deepin-font-installer#thanks";
+        const QString acknowledgementLink = "https://www.deepin.org/acknowledgments/deepin-pinyin-assistant#thanks";
 
         app.setOrganizationName("deepin");
-        app.setApplicationName("deepin-font-installer");
+        app.setApplicationName("deepin-pinyin-assistant");
         app.setApplicationDisplayName(QObject::tr("Deepin Font Installer"));
         app.setApplicationVersion("1.0");
 
@@ -63,7 +64,12 @@ int main(int argc, char *argv[])
 
         MainWindow window;
 
-        Dtk::Widget::moveToCenter(&window);
+        QObject::connect(&app, &DApplication::newInstanceStarted, &window, &MainWindow::startListen);
+        
+        int width = 800;
+        int height = 150;
+        window.setFixedSize(width, height);
+        window.move((QApplication::desktop()->screen()->rect().width() - width) / 2, 0);
         window.show();
         
         return app.exec();

@@ -1,4 +1,5 @@
 <!DOCTYPE RCC><RCC version="1.0">
-  <qresource>
+  <qresource prefix="/misc">
+        <file>dict/pinyin.dict</file>
   </qresource>
 </RCC>

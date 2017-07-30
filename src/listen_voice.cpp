@@ -8,21 +8,22 @@
 #include "msp_cmn.h"
 #include "msp_errors.h"
 #include "speech_recognizer.h"
+#include <QDebug>
 
 #define FRAME_LEN   640
 #define BUFFER_SIZE 4096
 
-static void showResult(char *string, char isOver)
-{
-    printf("\rResult: [ %s ]", string);
-    if(isOver)
-        putchar('\n');
-}
-
 static char *recognizeResult = NULL;
 static unsigned int resultBufferSize = BUFFER_SIZE;
+static bool speakDone = false;
+static QString text = "";
 
-void resultHandler(const char *result, char isLast)
+void ListenVoice::showResult(char *string, char)
+{
+    text = QString::fromStdString(string);
+}
+
+void ListenVoice::resultHandler(const char *result, char isLast)
 {
     if (result) {
         size_t left = resultBufferSize - 1 - strlen(recognizeResult);
@@ -37,31 +38,36 @@ void resultHandler(const char *result, char isLast)
             }
         }
         strncat(recognizeResult, result, size);
-        showResult(recognizeResult, isLast);
+        ListenVoice::showResult(recognizeResult, isLast);
     }
 }
-void speechBeginHandler()
+
+void ListenVoice::speechBeginHandler()
 {
-    if (recognizeResult)
-    {
+    if (recognizeResult) {
         free(recognizeResult);
     }
+    
     recognizeResult = (char*)malloc(BUFFER_SIZE);
     resultBufferSize = BUFFER_SIZE;
     memset(recognizeResult, 0, resultBufferSize);
 
     printf("Start Listening...\n");
 }
-void speechEndHandler(int reason)
+
+void ListenVoice::speechEndHandler(int reason)
 {
-    if (reason == END_REASON_VAD_DETECT)
+    if (reason == END_REASON_VAD_DETECT) {
         printf("\nSpeaking done \n");
-    else
+        
+        speakDone = true;
+    } else {
         printf("\nRecognizer error %d\n", reason);
+    }
 }
 
 /* demo recognize the audio from microphone */
-static void listenFromMicrophone(const char* sessionBeginParams)
+void ListenVoice::listenFromMicrophone(const char* sessionBeginParams)
 {
     int errcode;
     int i = 0;
@@ -69,9 +75,9 @@ static void listenFromMicrophone(const char* sessionBeginParams)
     struct speech_rec iat;
 
     struct speech_rec_notifier recnotifier = {
-        resultHandler,
-        speechBeginHandler,
-        speechEndHandler
+        ListenVoice::resultHandler,
+        ListenVoice::speechBeginHandler,
+        ListenVoice::speechEndHandler
     };
 
     errcode = sr_init(&iat, sessionBeginParams, SR_MIC, &recnotifier);
@@ -79,13 +85,17 @@ static void listenFromMicrophone(const char* sessionBeginParams)
         printf("speech recognizer init failed\n");
         return;
     }
+    
     errcode = sr_start_listening(&iat);
     if (errcode) {
         printf("start listen failed %d\n", errcode);
     }
+    
     /* demo 15 seconds recording */
-    while(i++ < 15)
+    while (!speakDone && i++ < 15) {
         sleep(1);
+    }
+    
     errcode = sr_stop_listening(&iat);
     if (errcode) {
         printf("stop listening failed %d\n", errcode);
@@ -102,7 +112,7 @@ ListenVoice::ListenVoice(QObject *parent) : QThread(parent)
 void ListenVoice::run()
 {
     int ret = MSP_SUCCESS;
-    const char* login_params = "appid = 513e0a70, work_dir = .";
+    const char* loginParams = "appid = 513e0a70, work_dir = .";
     
     /*
      * See "iFlytek MSC Reference Manual"
@@ -115,20 +125,21 @@ void ListenVoice::run()
     /* Login first. the 1st arg is username, the 2nd arg is password
      * just set them as NULL. the 3rd arg is login paramertes
      * */
-    ret = MSPLogin(NULL, NULL, login_params);
+    ret = MSPLogin(NULL, NULL, loginParams);
     if (MSP_SUCCESS != ret) {
         printf("MSPLogin failed , Error code %d.\n",ret);
-        goto exit; // login fail, exit the program
+        MSPLogout(); // Logout...
+        return;
     }
 
     printf("Demo recognizing the speech from microphone\n");
     printf("Speak in 15 seconds\n");
 
-    listenFromMicrophone(sessionBeginParams);
+    speakDone = false;
+    text = "";
+    ListenVoice::listenFromMicrophone(sessionBeginParams);
 
-    printf("15 sec passed\n");
-exit:
-    MSPLogout(); // Logout...
+    voiceText(text);
 }
 
 void ListenVoice::startListen()

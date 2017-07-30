@@ -28,8 +28,14 @@
 #include "dmainwindow.h"
 #include <QAction>
 #include <QHBoxLayout>
+#include <QLabel>
 #include <QMenu>
+#include <QStackedLayout>
 #include "listen_voice.h"
+#include "waveform.h"
+#include <QAudioProbe>
+#include <QAudioRecorder>
+#include "pinyin_widget.h"
 
 DWIDGET_USE_NAMESPACE
 
@@ -43,11 +49,23 @@ public:
 
     bool eventFilter(QObject *, QEvent *);
     void paintEvent(QPaintEvent *);
+                                  
+    void startListen();
 
 public slots:
+    void showPinyin(QString text);
+    void renderLevel(const QAudioBuffer &buffer);
 
 private:
     ListenVoice listenVoice;
+    QWidget *layoutWidget;
+    QStackedLayout *stackedLayout;
+    Waveform *waveform;
+    QAudioProbe *audioProbe;
+    QAudioRecorder *audioRecorder;
+    float recordingTime;
+    QDateTime lastUpdateTime;
+    PinyinWidget *pinyinWidget;
 };
 
 #endif

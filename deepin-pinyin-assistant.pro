@@ -7,7 +7,7 @@ TARGET = deepin-pinyin-assistant
 
 CONFIG += link_pkgconfig
 CONFIG += c++11 
-PKGCONFIG += xcb xcb-util dtkwidget
+PKGCONFIG += xcb xcb-util dtkwidget libavformat libavcodec libavutil
 RESOURCES = deepin-pinyin-assistant.qrc
 
 CONFIG(debug, debug|release) {
@@ -28,11 +28,17 @@ HEADERS += src/utils.h \
            src/qisr.h \
            src/qtts.h \
            src/listen_voice.h \
+           src/waveform.h \
+           src/chinese2pinyin.h \
+           src/pinyin_widget.h \
            src/main_window.h
 SOURCES += src/main.cpp \
            src/speech_recognizer.c \
            src/linuxrec.c \
            src/listen_voice.cpp \
+           src/waveform.cpp \
+           src/chinese2pinyin.cpp \
+           src/pinyin_widget.cpp \
            src/main_window.cpp \
            src/utils.cpp
 		   
@@ -42,6 +48,7 @@ QT += gui
 QT += network
 QT += x11extras
 QT += dbus
+QT += multimedia
 
 QMAKE_CXXFLAGS += -g
 LIBS += -lX11 -lXext -lXtst -lmsc -lrt -ldl -lpthread -lasound
