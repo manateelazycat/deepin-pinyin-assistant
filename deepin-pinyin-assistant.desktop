@@ -1,0 +1,15 @@
+[Desktop Entry]
+Categories=System;Qt;
+Comment=Pinyin Assistant
+Exec=deepin-pinyin-assistant
+GenericName=Pinyin Assistant
+Icon=deepin-pinyin-assistant
+Name=Deepin Pinyin Assistant
+Type=Application
+
+
+# Translations
+Name[zh_CN]=深度拼音助手
+Icon[zh_CN]=deepin-pinyin-assistant
+Comment[zh_CN]=语音转拼音
+GenericName[zh_CN]=语音转拼音
