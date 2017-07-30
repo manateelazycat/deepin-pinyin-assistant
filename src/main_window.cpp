@@ -116,6 +116,10 @@ void MainWindow::showPinyin(QString text)
 
 bool MainWindow::eventFilter(QObject *, QEvent *event)
 {
+    if (event->type() == QEvent::MouseButtonPress) {
+        QApplication::quit();
+    }
+    
     return false;
 }
 
