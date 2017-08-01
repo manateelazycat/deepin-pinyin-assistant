@@ -18,7 +18,7 @@
 
 ## 使用
 
-* ./deepin-font-installer
+* ./deepin-pinyin-assistant
 
 建议把这个命令绑定到快捷键，方便快速唤醒拼音助手。
 
